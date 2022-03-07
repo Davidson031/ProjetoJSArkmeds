@@ -1,0 +1,311 @@
+<html>
+
+
+  <head> </head>
+  <body>
+    <form id="myForm">
+      <input type="file" id="csvFile" accept=".csv" />
+      <br /><br><br>
+      <input type="submit" value="Enviar CSV" />
+    </form>
+
+
+
+
+
+    <script>
+
+      //recuperando o arquivo do upload
+      //const myForm = document.getElementById("myForm");
+      const csvFile = document.getElementById("csvFile");
+
+      //funcao para cortar a string do csv em um array, utiliza o delimitador para fazer o primeiro corte e recuperar os cabeçalhos e depois um segundo corte para as linhas, monta o array e o retorna.
+      function csvToArray(str, delimiter = ",") {
+  
+         const headers = str.slice(0, str.indexOf("\r")).split(delimiter);
+         const rows = str.slice(str.indexOf("\r\n") + 1).split("\r\n");
+      
+      
+          const arr = rows.map(function (row) {
+            const values = row.split(delimiter);
+
+            const el = headers.reduce(function (object, header, index) {
+              object[header] = values[index];
+              return object;
+            }, {});
+
+            return el;
+          });
+
+        return arr;
+      }
+
+      //funcao para receber a linha do array e fazer a verificação do cabeçalho de e-mail.
+      function checarEmail(linha){
+
+        //Recupera primeiro e ultimo nome, os normaliza (retirando acentos, etc) e os concatena com o restante do template de e-mail, ao final faz a comparacao com o campo recebido
+          var nomearray = linha.nome.split(' ', linha.nome.length);   
+
+          //pequena verificacao com o campo nome, pois o Lowercase estoura undefined caso venha vazio aqui.
+          if(linha.nome=="" || typeof linha.nome==='undefined'){
+            return true;
+          }
+          var nome_res = nomearray[0].toLowerCase().normalize("NFD").replace(/[^a-zA-Zs]/g, "") +"."+ nomearray[nomearray.length-1].toLowerCase().normalize("NFD").replace(/[^a-zA-Zs]/g, "") + "@gmail.com";
+          
+          return (nome_res != linha.email) ? true : false;
+      }
+
+      //funcao para receber a linha do array e fazer a verificacao do cabecalho de nome.
+      function checarTamanhoNome(linha){
+
+        return (linha.nome.length>25) ? true : false;
+          
+      }
+
+      //funcao para receber a linha do array e fazer a verificacao do cabecalho de celular.
+      function checarCelular(linha){
+        
+        const regex = new RegExp(/^\(\d{2}\)\s\d{5}\-\d{4}/);
+
+        return !regex.test(linha.celular);
+ 
+        //Checagem manual do campo, compara campos especiais esperados em um input correto e, se passar, os separa em um array para uma segunda verificacao
+            /*if(linha.celular.length==15){
+            
+              if((linha.celular[0]== "(" && linha.celular[3] == ")") && (linha.celular[4]==" ") && (linha.celular[10] == "-")) {
+
+                  var celular_array = linha.celular.split(/[()-\s]+/, linha.length).filter(function(el) {return el.length != 0});;
+
+                  return buscarPorNaoNumero(celular_array) ? true : false;
+                                             
+                }
+
+            } 
+            
+            return true;*/       
+       }
+
+       //funcao utilitaria, recebe um array qualquer e verifica se possui algum campo nao-numero.
+      function buscarPorNaoNumero(linha){
+
+        for(var i=0; i<linha.length;i++){
+
+          if(isNaN(linha[i])){ 
+            return true; 
+          }
+        }
+        return false;
+
+       }
+
+      //funcao para receber a linha do array e fazer a verificacao do cabecalho de CPF.
+      function checarCpf(linha){
+
+      //retorna a comparacao da string recebida com o regex montado
+       const regex = new RegExp(/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/);
+
+       return !regex.test(linha.cpf);
+          
+
+       //Checagem manual do campo, compara campos especiais esperados em um input correto e, se passar, os separa em um array para uma segunda verificacao
+
+          /*if(linha.cpf.length==14){
+
+            if((linha.cpf[3]== "." && linha.cpf[7] == ".") && (linha.cpf[11]=="-")) {
+
+              var cpf_array = linha.cpf.split(/[.-]+/, linha.cpf.length);      
+
+              return buscarPorNaoNumero(cpf_array) ? true : false;              
+            }
+          }
+
+          return true;*/
+     }
+      
+      //funcao utilitaria, utilizada pelas funcoes de verificacao de data, verifica se possui valores invalidos.
+      function buscarPorDataInvalida(data){
+
+        return (data[0]>31 || data[1]>12);
+
+      }
+
+      //funcao para receber a linha do array e fazer a verificacao do cabecalho de data de nascimento.
+      function checarDataNascimento(linha){
+
+        //retorna a comparacao da string recebida com o regex montado
+        const regex = new RegExp(/^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/);
+
+        return !regex.test(linha.data_nascimento);
+
+
+        //Checagem manual do campo, compara campos especiais esperados em um input correto e, se passar, os separa em um array para uma segunda verificacao
+
+        /*if(linha.data_nascimento.length == 10){
+
+            if(linha.data_nascimento[2] == "/" && linha.data_nascimento[5] == "/"){
+
+              var data_array = linha.data_nascimento.split('/', linha.data_nascimento.length);               
+              
+              return buscarPorNaoNumero(data_array)||buscarPorDataInvalida(data_array) ? true : false;
+              
+            }     
+        
+        }
+        return true;*/
+
+      }
+
+      //funcao para receber a linha do array e fazer a verificacao do cabecalho de data de cadastro.
+      function checarDataCadastro(linha){
+
+        //retorna a comparacao da string recebida com o regex montado
+        const regex = new RegExp(/^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/);
+
+        return !regex.test(linha.data_cadastro);
+
+
+        //Checagem manual do campo, compara campos especiais esperados em um input correto e, se passar, os separa em um array para uma segunda verificacao
+
+        /*
+        if(linha.data_cadastro.length == 10){
+
+              if(linha.data_cadastro[2] == "/" && linha.data_cadastro[5] == "/"){
+
+                var data_array = linha.data_cadastro.split('/', linha.data_cadastro.length);
+                 
+                return buscarPorNaoNumero(data_array)||buscarPorDataInvalida(data_array) ? true : false;
+              
+              }     
+
+          }
+          return true; */  
+      }
+
+      //funcao para receber a linha do array e fazer a verificacao do cabecalho de idade.
+      function checarIdade(linha){
+
+        //Verifica se o campo recebido é um numero
+        return buscarPorNaoNumero(linha.idade) ? true : false;
+
+      }
+
+      //funcao utilitaria, checa todos os campos do array da linha para ver se a mesma esta vazia
+      function checarLinhaVazia(linha){
+        
+        if((linha.nome==""||typeof linha.nome==='undefined')&&(linha.cpf==""||typeof linha.cpf==='undefined')&&(linha.celular==""||typeof linha.celular==='undefined')&&(linha.data_nascimento==""||typeof linha.data_nascimento==='undefined')
+           &&(linha.data_cadastro==""||typeof linha.data_cadastro==='undefined')&&(linha.idade==""||typeof linha.idade==='undefined')&&(linha.email==""||typeof linha.email==='undefined')){
+          return true;
+        }
+        return false;
+      }
+
+
+
+
+
+
+
+      
+  
+      //boilerplate para o recebimento e tratamento do CSV, alem do adicionamento de funcao ao submit do form.
+      myForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const input = csvFile.files[0];
+        const reader = new FileReader();
+  
+        reader.onload = function (e) {  
+
+          const text = e.target.result;
+          const data = csvToArray(text);
+      
+
+          //percorre o array montado e chama as funcoes de checagem em cada iteracao.
+          data.forEach(function (arrayItem, index) {
+
+            //Montando a estrutura do aviso de erro para ir ao console utilizando o indice do loop atual, sera complementada pela string  do erro, caso ele ocorra.
+            var a = "[LINHA: ";
+            var b = index+2;
+            var c = "]";
+            var d = a+b+c;
+
+       
+              
+              //quebrando iteracao em caso de linha INTEIRA vazia no csv, evita estouro por undefined       
+              if(checarLinhaVazia(arrayItem)){
+                console.log(d + "Linha Vazia!!!");
+                return;
+              }
+                
+              
+               //-----------CHECAGENS----------------//
+               //Corre o array chamando a funcao de checagem em cada cabecalho passando a linha do csv, se houver erro imprime o template junto com a descricao do erro. 
+
+              
+               if(checarTamanhoNome(arrayItem)){    
+
+                var d = " Nome possui mais de 25 caracteres";
+                var res = a+b+c+d;
+                console.log(res);
+              }
+
+              if(checarEmail(arrayItem)){
+
+                var d = " E-mail em formato ou valor invalido (Correto: NomeSobrenome@gmail.com)";
+                var res = a+b+c+d;
+                console.log(res);          
+              }
+              
+              if(checarCpf(arrayItem)){
+
+                var d = " CPF em formato invalido (Correto: 000.000.000-00)";
+                var res = a+b+c+d;
+                console.log(res);            
+              }
+
+              if(checarCelular(arrayItem)){
+
+                var d = " Celular em formato invalido (Correto: (00) 00000-0000)";
+                var res = a+b+c+d;
+                console.log(res); 
+
+              }
+
+              if(checarDataNascimento(arrayItem)){
+
+                  var d = " Data de Nascimento em formato ou valor invalido (Correto: (00) 00000-0000)";
+                  var res = a+b+c+d;
+                  console.log(res); 
+
+              }
+
+              if(checarDataCadastro(arrayItem)){
+
+                  var d = " Data de Cadastro em formato ou valor invalido (Correto: 00/00/0000)";
+                  var res = a+b+c+d;
+                  console.log(res); 
+
+              }
+          
+              if(checarIdade(arrayItem)){
+
+                    var d = " Idade em formato invalido";
+                    var res = a+b+c+d;
+                    console.log(res);          
+              }
+              //----------------------------------//
+              
+         });
+
+
+        };
+        
+        reader.readAsText(input);
+      });
+    </script>
+  </body>
+
+
+
+
+
+</html>

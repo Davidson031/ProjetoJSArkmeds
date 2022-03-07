@@ -1,0 +1,22 @@
+[READ ME]
+
+    
+Tentei deixar o processo de execução o mais simples possível aqui, código Javascript vanilla em tags script dentro do próprio HTML, sem referenciação. Só abrir o HTML.
+O arquivo possui um input e um submit, o código será executado e seu resultados impressos no console de Inspeção do navegador assim que enviado o Submit, só abrir o console, fazer o upload do .CSV no input e enviar.
+
+
+
+IMPORTANTE(1): Em algumas funções do projeto eu faço uso de expressões regulares para a verificação de strings, mas também deixo abaixo delas em forma comentada uma forma mais manual de comparação, caso queira trocar só comente/retire
+o regex e descomente a parte manual abaixo dele, ambos funcionam da mesma forma.
+
+
+IMPORTANTE (2): Na documentação se pede uma verificação de formatos de celular no estilo (xx) xxxxx-xxxx, mas no arquivo de referência anexado na página todos os campos estão no formato (xx) xxxx-xxxxx, no projeto deixei
+a verificação como se pede na descrição do projeto [(xx) xxxxx-xxxx], então caso utilize o arquivo de referência, **TODOS** os campos de celular darão erro. 
+Caso queira adaptar o código para se adequar ao arquivo de referência enviado, troque a linha [68] para:
+
+    const regex = new RegExp(/^\(\d{2}\)\s\d{4}\-\d{5}/);
+
+e a linha [75] para: 
+
+    if((linha.celular[0]== "(" && linha.celular[3] == ")") && (linha.celular[4]==" ") && (linha.celular[9] == "-")) {
+
